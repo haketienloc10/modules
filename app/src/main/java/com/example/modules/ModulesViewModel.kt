@@ -61,9 +61,9 @@ class ModulesViewModel(
                             lastUpdatedLabel = nowLabel(),
                         )
                         ServiceKind.OPENCLAW -> module.copy(
-                            isRunning = true,
-                            status = "Quản lý qua tmux session",
-                            details = "Session mục tiêu: ${module.sessionName}",
+                            isRunning = false,
+                            status = "Chưa kiểm tra được từ app",
+                            details = "Mở Termux và kiểm tra session: ${module.sessionName}",
                             lastUpdatedLabel = nowLabel(),
                         )
                     }
@@ -90,9 +90,9 @@ class ModulesViewModel(
                             lastUpdatedLabel = nowLabel(),
                         )
                         ServiceKind.OPENCLAW -> module.copy(
-                            isRunning = true,
-                            status = "Quản lý qua tmux session",
-                            details = "Session mục tiêu: ${module.sessionName}",
+                            isRunning = false,
+                            status = "Chưa kiểm tra được từ app",
+                            details = "Mở Termux và kiểm tra session: ${module.sessionName}",
                             lastUpdatedLabel = nowLabel(),
                         )
                     }

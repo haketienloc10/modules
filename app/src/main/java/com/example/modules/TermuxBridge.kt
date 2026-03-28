@@ -11,21 +11,23 @@ object TermuxBridge {
     private const val EXTRA_ARGUMENTS = "com.termux.RUN_COMMAND_ARGUMENTS"
     private const val EXTRA_BACKGROUND = "com.termux.RUN_COMMAND_BACKGROUND"
     private const val EXTRA_WORKDIR = "com.termux.RUN_COMMAND_WORKDIR"
+    private const val EXTRA_COMMAND_LABEL = "com.termux.RUN_COMMAND_LABEL"
     private const val TERMUX_PACKAGE = "com.termux"
+    private const val TERMUX_RUN_COMMAND_SERVICE = "com.termux.app.RunCommandService"
     private const val TERMUX_BIN = "/data/data/com.termux/files/usr/bin/bash"
     private const val TERMUX_HOME = "/data/data/com.termux/files/home"
 
-    fun start(context: Context, module: ServiceModule) {
-        runShellCommand(context, module.startCommand, "Đã gửi lệnh start sang Termux")
+    fun start(context: Context, module: ServiceModule): Boolean {
+        return runShellCommand(context, module.startCommand, "start ${module.title}")
     }
 
-    fun stop(context: Context, module: ServiceModule) {
-        runShellCommand(context, module.stopCommand, "Đã gửi lệnh stop sang Termux")
+    fun stop(context: Context, module: ServiceModule): Boolean {
+        return runShellCommand(context, module.stopCommand, "stop ${module.title}")
     }
 
-    fun restart(context: Context, module: ServiceModule) {
-        val command = "${module.stopCommand} >/dev/null 2>&1 || true; ${module.startCommand}"
-        runShellCommand(context, command, "Đã gửi lệnh restart sang Termux")
+    fun restart(context: Context, module: ServiceModule): Boolean {
+        val command = "${module.stopCommand}; ${module.startCommand}"
+        return runShellCommand(context, command, "restart ${module.title}")
     }
 
     fun openTermuxApp(context: Context) {
@@ -37,21 +39,28 @@ object TermuxBridge {
         }
     }
 
-    private fun runShellCommand(context: Context, command: String, toastMessage: String) {
+    private fun runShellCommand(context: Context, command: String, label: String): Boolean {
         val intent = Intent(ACTION_RUN_COMMAND).apply {
-            setPackage(TERMUX_PACKAGE)
+            setClassName(TERMUX_PACKAGE, TERMUX_RUN_COMMAND_SERVICE)
             putExtra(EXTRA_COMMAND_PATH, TERMUX_BIN)
             putExtra(EXTRA_ARGUMENTS, arrayOf("-lc", command))
             putExtra(EXTRA_BACKGROUND, true)
             putExtra(EXTRA_WORKDIR, TERMUX_HOME)
+            putExtra(EXTRA_COMMAND_LABEL, label)
         }
-        try {
-            context.sendBroadcast(intent)
-            toast(context, toastMessage)
+        return try {
+            context.startService(intent)
+            toast(context, "Đã gửi lệnh $label sang Termux")
+            true
         } catch (_: SecurityException) {
             toast(context, "Thiếu quyền RUN_COMMAND của Termux")
+            false
         } catch (_: ActivityNotFoundException) {
             toast(context, "Không tìm thấy Termux")
+            false
+        } catch (_: IllegalStateException) {
+            toast(context, "Termux từ chối chạy lệnh lúc này")
+            false
         }
     }
 
